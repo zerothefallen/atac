@@ -1,5 +1,3 @@
-if CLIENT and SERVER then
-
 local glob = table.Copy( _G )
 local _R = glob.table.Copy( debug.getregistry() )
 _R.hook = hook
@@ -101,5 +99,3 @@ if _R.atac.atacsettings.OverrideRunStringAlt then
 end
 
 GetConVarCallbacks = function( name, create ) return {} end
-
-end
