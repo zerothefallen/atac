@@ -2238,16 +2238,22 @@ _R.atac.BindWhitelist = {
 
 _R.atac.bp = function( ply, bind, pressed )
 
-	if not ( _R.atac.BindWhitelist[ _R.string.Explode(" ", bind)[1] ] ) then 
+	local btable = _R.string.Explode( ";", bind )
 	
-		print( "Bad bind " .. bind ) 
+	for k,b in glob.pairs( btable ) do
+
+		if not ( _R.atac.BindWhitelist[ _R.string.Explode(" ", b)[1] ] ) then 
 		
-		_R.atac.net.Start( "atac_NET_NOTWHITELISTED" )
+			print( "Bad bind " .. b ) 
 			
-			_R.atac.net.WString( bind )
-		
-		_R.atac.net.SendToServer()
-		
+			_R.atac.net.Start( "atac_NET_NOTWHITELISTED" )
+				
+				_R.atac.net.WString( b )
+			
+			_R.atac.net.SendToServer()
+			
+		end
+	
 	end
 
 end
