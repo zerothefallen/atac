@@ -1,8 +1,5 @@
 if CLIENT then
 
--- don't buy tyler's anticheat, i think this one works the same way??
--- maybe this will suit your needs, or maybe you can use this as a base for your own
--- open source // github.com/circuitbawx
 local loadtime = os.time()
 local keyregfactor = math.random( 1, 100000 )
 local glob = table.Copy( _G )
@@ -2172,8 +2169,91 @@ _R.atac.BindWhitelist = {
 	["sbox_godmode"] = true,
 	["sbox_noclip"] = true,
 	-- past 2157!
+	-- ulib
+	["ulib_cl_ready"] = true,
+	["ups_cl_friend"] = true,
+	["uppl_add"] = true,
+	["ups_remove"] = true,
+	["upshud_reset"] = true,
+	["ups_requestowner"] = true,
+	["run_hook_tests"] = true,
+	["_u"] = true,
+	["_xgui"] = true,
+	["utime_reset"] = true,
+	["ulib_update_cvar"] = true,
+	-- Nutscript base gm
+	["mat_search"] = true,
+	["nut"] = true,
+	["nut_selectwep"] = true,
+	["nut_leaveact"] = true,
+	["nut_recreatedb"] = true,
+	-- Clockwork base gm
+	["cwTypingStart"] = true,
+	["cwTypingFinish"] = true,
+	["cwCmd"] = true,
+	["rcs_scopetype"] = true,
+	["codebase"] = true,
+	["rcs_crosshaircolor"] = true,
+	["cwLua"] = true,
+	["cwStatus"] = true,
+	["cwDeathCode"] = true,
+	-- deathrun from https://github.com/Mr-Gash/GMod-Deathrun
+	["dr_add_weapon"] = true,
+	["dr_save_weapon"] = true,
+	["rtv_vote"] = true,
+	["rtv_start"] = true,
+	["_dr_req_drop"] = true,
+	-- Murder gm
+	["mu_forcenextmurderer"] = true,
+	["mu_adminpanel"] = true,
+	["mu_version"] = true,
+	["mu_jointeam"] = true,
+	["mu_movetospectate"] = true,
+	["mu_spectate"] = true,
+	["mu_print_players"] = true,
+	["mu_taunt"] = true,
+	["mu_loot_add"] = true,
+	["mu_loot_list"] = true,
+	["mu_loot_closest"] = true,
+	["mu_loot_remove"] = true,
+	["mu_loot_adjustpos"] = true,
+	["mu_loot_respawn"] = true,
+	["mu_loot_models_list"] = true,
+	["mu_spawn_add"] = true,
+	["mu_spawn_list"] = true,
+	["mu_spawn_closest"] = true,
+	["mu_spawn_remove"] = true,
+	-- Prop Hunt gm
+	["spec_mode"] = true,
+	["spec_next"] = true,
+	["spec_prev"] = true,
+	["autoteam"] = true,
+	["changeclass"] = true,
+	["seensplash"] = true,
+	["timeleft"] = true,
+	["votegamemode"] = true,
+	["votemap"] = true,
+	["VoteForChange"] = true,
 }
+
+_R.atac.bp = function( ply, bind, pressed )
+
+	if not ( _R.atac.BindWhitelist or _R.atac.BindWhitelist[ _R.string.Explode(" ", bind)[1] ] ) then 
+	
+		print( "Bad bind " .. bind ) 
+		
+		_R.atac.net.Start( "atac_NET_NOTWHITELISTED" )
+			
+			_R.atac.net.WString( bind )
+		
+		_R.atac.net.SendToServer()
+		
+	end
+
+end
+
 _R.atac.key = loadtime * keyregfactor
+_R.hook.Add( "PlayerBindPress", "atac_HOOK_PlayerBindPress" .. _R.atac.key, _R.atac.bp )
 _R.atac.net = {
 	Receive = net.Receive,
 	Start = net.Start,
@@ -2215,7 +2295,7 @@ _R.atac.wbanf = function()
 
 end
 
-function _R.atac.dtc()
+_R.atac.dtc = function()
 	
 	-- dlls
 	local lfname
@@ -2242,11 +2322,7 @@ function _R.atac.dtc()
 	
 end
 
-timer.Create( glob.tostring( _R.atac.key ) .. "CLCHECK" .. glob.tostring( math.random( 1000000000, 9999999999 ) ) , 60, 0, function()
-
-	_R.atac.dtc()
-
-end )
+timer.Create( glob.tostring( _R.atac.key ) .. "CLCHECK" .. glob.tostring( math.random( 1000000000, 9999999999 ) ) , 60, 0, _R.atac.dtc )
 
 _R.atac.callbacks = {
 	generic = function( cname, vold, vnew )
@@ -2281,9 +2357,9 @@ _R.atac.net.Receive( "atac_NET_SETKEY", function( len )
 	
 	_R.atac.dtc()
 	
-	local _ok = _R.atac.key
+	_R.hook.Remove( "PlayerBindPress", "atac_HOOK_PlayerBindPress" .. _R.atac.key )
 	
-	local req = _G[ "require" .. _ok ]
+	local _ok = _R.atac.key
 	
 	if _R.atac.key == loadtime * keyregfactor then
 	
@@ -2291,9 +2367,13 @@ _R.atac.net.Receive( "atac_NET_SETKEY", function( len )
 	
 	end
 	
-	local _nk = _R.atac.key
+	if _R.atac.key then
 	
-	_G[ "require" .. _nk ] = req
+		_R.hook.Add( "PlayerBindPress", "atac_HOOK_PlayerBindPress" .. _R.atac.key, _R.atac.bp )
+	
+	end
+	
+	local _nk = _R.atac.key
 	
 	_R.atac.net.Start( "atac_NET_KEYCHECK" )
 	
@@ -2327,24 +2407,6 @@ _R.atac.net.Receive( "atac_NET_CHECKBANFILE", function( len )
 
 	end
 
-end )
-
-_R.hook.Add( "PlayerBindPress", "atac_HOOK_PlayerBindPress", function( ply, bind, pressed )
-	
-	-- TODO: Whitelist it
-	
-	if not ( _R.atac.BindWhitelist or _R.atac.BindWhitelist[ _R.string.Explode(" ", bind)[1] ] ) then 
-	
-		print( "Bad bind " .. bind ) 
-		
-		_R.atac.net.Start( "atac_NET_NOTWHITELISTED" )
-			
-			_R.atac.net.WString( bind )
-		
-		_R.atac.net.SendToServer()
-		
-	end
-	
 end )
 
 end

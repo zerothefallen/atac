@@ -1,8 +1,5 @@
 if SERVER then
 
--- don't buy tyler's anticheat, i think this one works the same way??
--- maybe this will suit your needs, or maybe you can use this as a base for your own
--- open source, based off of some other shit i was doing // github.com/circuitbawx
 local glob = table.Copy( _G )
 local _R = glob.table.Copy( debug.getregistry() )
 _R.hook = hook
@@ -32,10 +29,6 @@ _R.util.AddNetworkString( "atac_NET_CALLBACK_GENERIC" )
 _R.util.AddNetworkString( "atac_NET_CALLBACK_SEVERE" )
 _R.util.AddNetworkString( "atac_NET_FORBIDDENFUNCTION_GENERIC" )
 _R.util.AddNetworkString( "atac_NET_FORBIDDENFUNCTION_SEVERE" )
-_R.util.AddNetworkString( "atac_NET_BADMODULE" )
-_R.util.AddNetworkString( "atac_NET_BADBIND" )
-_R.util.AddNetworkString( "atac_NET_BADCVARS" )
-_R.util.AddNetworkString( "atac_NET_BADCMDS" )
 _R.util.AddNetworkString( "atac_NET_BANMEPLEASE" )
 _R.util.AddNetworkString( "atac_NET_CHECKBANFILE" )
 _R.util.AddNetworkString( "atac_NET_UNKNOWNDLL" )

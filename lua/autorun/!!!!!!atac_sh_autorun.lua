@@ -72,14 +72,31 @@ debug.getupvalue = function() if CLIENT then tellfunc_severe( "debug.getupvalue"
 
 if _R.atac.atacsettings.OverrideRunString then
 	
-	RunString = function() if CLIENT then tellfunc_severe( "RunString" ) end end
+	if _R.atac.atacsettings.RunStringSevere then
+	
+		RunString = function() if CLIENT then tellfunc_severe( "RunString" ) end end
+	
+	else
+	
+		RunString = function() if CLIENT then tellfunc_generic( "RunString" ) end end
+	
+	end
 
 end
 
 if _R.atac.atacsettings.OverrideRunStringAlt then
-
-	RunStringEx = function() if CLIENT then tellfunc_severe( "RunStringEx" ) end end
-	CompileString = function() if CLIENT then tellfunc_severe( "CompileString" ) end end
+	
+	if _R.atac.atacsettings.RunStringSevere then
+	
+		RunStringEx = function() if CLIENT then tellfunc_severe( "RunStringEx" ) end end
+		CompileString = function() if CLIENT then tellfunc_severe( "CompileString" ) end end
+		
+	else
+	
+		RunStringEx = function() if CLIENT then tellfunc_generic( "RunStringEx" ) end end
+		CompileString = function() if CLIENT then tellfunc_generic( "CompileString" ) end end
+	
+	end
 
 end
 
