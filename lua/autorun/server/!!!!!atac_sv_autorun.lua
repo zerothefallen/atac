@@ -1,5 +1,7 @@
 if SERVER then
 
+-- require( "slog2" )
+
 local glob = table.Copy( _G )
 local _R = glob.table.Copy( debug.getregistry() )
 _R.hook = hook
@@ -50,6 +52,46 @@ _R.atac.net = {
 	RInt = net.ReadInt,
 	RFloat = net.ReadFloat,
 }
+
+-- experimental slog2 stuff
+
+--[[
+_R.atac.slog = {}
+
+_R.atac.slog.badstringexecute = {
+	["lua_openscript"] = true,
+	["lua_openscript_cl"] = true,
+	["lua_run"] = true,
+	["lua_run_cl"] = true,
+	["rcon_password"] = true,
+	["sv_cheats"] = true,
+	["sv_allowcslua"] = true,
+	["host_framerate"] = true,
+}
+
+hook.Add( "ExecuteStringCommand", "atac_HOOK_SLOG_ExecuteStringCommand", function( cmd, sid )
+	
+	print( sid )
+	
+	if _R.atac.slog.badstringexecute[ cmd ] and not ( string.find( cmd, "say" ) or string.find( cmd, "ulx" ) or string.find( cmd, "ev" ) ) then
+	
+		local ply
+		
+		for _,pl in glob.pairs( glob.player.GetAll() ) do
+		
+			if pl:SteamID() == sid then ply = pl end
+		
+		end
+		
+		if not ply then return end
+		
+		_R.Player.Kick( ply, "Cannot execute string \"" .. cmd .. "\"" )
+		
+	end
+	
+end )
+]]--
+-- end slog2
 
 _R.atac.net.Receive( "atac_NET_SETKEY", function( len ) 
 	

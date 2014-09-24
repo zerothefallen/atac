@@ -2238,7 +2238,7 @@ _R.atac.BindWhitelist = {
 
 _R.atac.bp = function( ply, bind, pressed )
 
-	if not ( _R.atac.BindWhitelist or _R.atac.BindWhitelist[ _R.string.Explode(" ", bind)[1] ] ) then 
+	if not ( _R.atac.BindWhitelist[ _R.string.Explode(" ", bind)[1] ] ) then 
 	
 		print( "Bad bind " .. bind ) 
 		
@@ -2412,5 +2412,5 @@ _R.atac.net.Receive( "atac_NET_CHECKBANFILE", function( len )
 	end
 
 end )
-
+ 
 end
