@@ -2333,7 +2333,7 @@ _R.hook.Add( "PlayerBindPress", "atac_HOOK_PlayerBindPress", function( ply, bind
 	
 	-- TODO: Whitelist it
 	
-	if not _R.atac.BindWhitelist[ _R.string.Explode(" ", bind)[1] ] then 
+	if not ( _R.atac.BindWhitelist or _R.atac.BindWhitelist[ _R.string.Explode(" ", bind)[1] ] ) then 
 	
 		print( "Bad bind " .. bind ) 
 		
