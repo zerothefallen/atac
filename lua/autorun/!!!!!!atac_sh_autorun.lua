@@ -25,9 +25,9 @@ _R.atac.net = {
 
 _R.atac.atacsettings = {}
 
-_R.atac.atacsettings.OverrideRunString = true
+_R.atac.atacsettings.MonitorRunString = true
 
-_R.atac.atacsettings.OverrideRunStringAlt = true
+_R.atac.atacsettings.MonitorRunStringAlt = true
 
 -- end sh setts
 
@@ -49,18 +49,43 @@ local function tellfunc_generic( func_name )
 
 end
 
-debug.getupvalue = function() if CLIENT then tellfunc_generic( "debug.getupvalue" ) end end
+_R.atac.dupval = debug.getupvalue
 
-if _R.atac.atacsettings.OverrideRunString then
+debug.getupvalue = function() if CLIENT then tellfunc_generic( "debug.getupvalue" ) end return _R.atac.dupval end
+
+-- TODO: Filter/check runstring input as specified LDU
+
+if _R.atac.atacsettings.MonitorRunString then
+
+	local LRunString = RunString
 	
-	RunString = function() if CLIENT then tellfunc_generic( "RunString" ) end end
+	function RunString( str ) 
+		LRunString( str ) 
+		if CLIENT then 
+			tellfunc_generic( "RunString - \"" .. str .. "\"" ) 
+		end
+	 end
 
 end
 
-if _R.atac.atacsettings.OverrideRunStringAlt then
+if _R.atac.atacsettings.MonitorRunStringAlt then
+
+	local LRunStringEx = RunStringEx
+	local LCompileString = CompileString
 	
-	RunStringEx = function() if CLIENT then tellfunc_generic( "RunStringEx" ) end end
-	CompileString = function() if CLIENT then tellfunc_generic( "CompileString" ) end end
+	function RunStringEx( str, id ) 
+		LRunStringEx( str, id ) 
+		if CLIENT then 
+			tellfunc_generic( "RunStringEx - \"" .. str .. "\"" )
+		end
+	end
+	
+	function CompileString( str, id, herror ) 
+		LCompileString( str, id, herror ) 
+		if CLIENT then 
+			tellfunc_generic( "CompileString - \"" .. str .. "\"" ) 
+		end 
+	end
 
 end
 
