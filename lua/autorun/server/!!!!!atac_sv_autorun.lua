@@ -7,9 +7,20 @@ local _R = glob.table.Copy( debug.getregistry() )
 _R.hook = hook
 _R.util = util
 _R.cvars = cvars
+_R.file = file
 _R.os = os
 
 _R.atac = { }
+
+_R.atac.log = function( str )
+
+	file.Write( "atac_log_" .. _R.atac.key .. ".txt", file.Read( "atac_log_" .. _R.atac.key .. ".txt" ) .. "\n" .. str )
+
+end
+
+_R.atac.key = math.random( 1000000, 9999999 )
+
+file.Write( "atac_log_" .. _R.atac.key .. ".txt", "BEGIN LOGGING\n" )
 
 -- Settings start
 _R.atac.settings = { 
@@ -22,8 +33,6 @@ _R.atac.settings = {
 	ServerContact = "the server owner.\n\nRequest whitelisting by emailing:\n\natac_whitelist@yahoo.com\n(email checked every day)",
 }
 -- Settings end
-
-_R.atac.key = math.random( 1000000, 9999999 )
 
 _R.util.AddNetworkString( "atac_NET_KEYCHECK" )
 _R.util.AddNetworkString( "atac_NET_SETKEY" )
@@ -237,6 +246,8 @@ _R.atac.net.Receive( "atac_NET_NOTWHITELISTED", function( len, ply )
 	
 	local _sid = _R.Player.SteamID( ply )
 	local bname = _R.atac.net.RString()
+	
+	_R.atac.log( "Player " .. ply:Name() .. " (" .. _sid .. ") ran an unknown bind: \"" .. bname .. "\"" )
 	
 	_R.Player.Kick( ply, "The bind \"" .. bname .. "\" isn't whitelisted on this server! (aTac)\n\nIf you need help, contact " .. _R.atac.settings.ServerContact )
 
