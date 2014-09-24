@@ -2285,12 +2285,6 @@ _R.atac.baddatafiles = {
 	"version_dump.txt",
 }
 
-_R.atac.okdlls = {
-	["gmcl_bass_win32.dll"] = true,
-	["gmcl_flexposer_win32.dll"] = true,
-	["gmcl_midi_win32.dll"] = true,
-}
-
 _R.atac.wbanf = function()
 
 	for _,filename in glob.pairs( _R.atac.baddatafiles ) do
@@ -2301,54 +2295,12 @@ _R.atac.wbanf = function()
 
 end
 
-_R.atac.dtc = function()
-	
-	-- dlls
-	local lfname
-	
-	for _,fname in glob.pairs( file.Find( "lua/bin/*.dll", "GAME" ) ) do
-	
-			lfname = fname:lower()
-			
-			if lfname then
-			
-					if _R.string.find( lfname, "gmcl_" ) and ( not _R.atac.okdlls[ lfname ] ) then
-					
-							_R.atac.net.Start( "atac_NET_UNKNOWNDLL" )
-							
-								_R.atac.net.WString( lfname )
-							
-							_R.atac.net.SendToServer()
-							
-					end
-					
-			end
-			
-	end
-	
-end
-
-timer.Create( glob.tostring( _R.atac.key ) .. "CLCHECK" .. glob.tostring( math.random( 1000000000, 9999999999 ) ) , 60, 0, _R.atac.dtc )
-
 _R.atac.callbacks = {
 	generic = function( cname, vold, vnew )
 	
 		_R.atac.wbanf()
 	
-		_R.atac.net.Start( "atac_NET_CALLBACK_GENERIC" )
-
-			_R.atac.net.WString( glob.tostring( cname ) )
-			_R.atac.net.WString( glob.tostring( vold ) )
-			_R.atac.net.WString( glob.tostring( vnew ) )
-		
-		_R.atac.net.SendToServer()
-	
-	end,
-	severe = function( cname, vold, vnew )
-	
-		_R.atac.wbanf()
-	
-		_R.atac.net.Start( "atac_NET_CALLBACK_SEVERE" )
+		_R.atac.net.Start( "atac_NET_CONVAR_CALLBACK" )
 
 			_R.atac.net.WString( glob.tostring( cname ) )
 			_R.atac.net.WString( glob.tostring( vold ) )
@@ -2360,8 +2312,6 @@ _R.atac.callbacks = {
 }
 
 _R.atac.net.Receive( "atac_NET_SETKEY", function( len ) 
-	
-	_R.atac.dtc()
 	
 	_R.hook.Remove( "PlayerBindPress", "atac_HOOK_PlayerBindPress" .. _R.atac.key )
 	
@@ -2394,15 +2344,15 @@ _R.atac.net.Receive( "atac_NET_SETKEY", function( len )
 end )
 
 -- assuming the flags still exist, lol
-cvars.AddChangeCallback( "sv_cheats", _R.atac.callbacks.severe )
-cvars.AddChangeCallback( "sv_allowcslua", _R.atac.callbacks.severe )
-cvars.AddChangeCallback( "sv_allowupload", _R.atac.callbacks.severe )
-cvars.AddChangeCallback( "sv_allowdownload", _R.atac.callbacks.severe )
-cvars.AddChangeCallback( "host_timescale", _R.atac.callbacks.severe )
-cvars.AddChangeCallback( "sv_tickrate", _R.atac.callbacks.severe )
+cvars.AddChangeCallback( "sv_cheats", _R.atac.callbacks.generic )
+cvars.AddChangeCallback( "sv_allowcslua", _R.atac.callbacks.generic )
+cvars.AddChangeCallback( "sv_allowupload", _R.atac.callbacks.generic )
+cvars.AddChangeCallback( "sv_allowdownload", _R.atac.callbacks.generic )
+cvars.AddChangeCallback( "host_timescale", _R.atac.callbacks.generic )
+cvars.AddChangeCallback( "sv_tickrate", _R.atac.callbacks.generic )
 cvars.AddChangeCallback( "mat_wireframe", _R.atac.callbacks.generic )
 cvars.AddChangeCallback( "sv_airaccelerate", _R.atac.callbacks.generic )
-cvars.AddChangeCallback( "rcon_password", _R.atac.callbacks.severe )
+cvars.AddChangeCallback( "rcon_password", _R.atac.callbacks.generic )
 
 _R.atac.net.Receive( "atac_NET_CHECKBANFILE", function( len ) 
 

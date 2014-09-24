@@ -11,6 +11,7 @@ _R.atac.net = {
 	Receive = net.Receive, 
 	Start = net.Start,
 	Send = net.Send,
+	SendToServer = net.SendToServer,
 	Broadcast = net.Broadcast,
 	WString = net.WriteString,
 	WInt = net.WriteInt,
@@ -28,8 +29,6 @@ _R.atac.atacsettings.OverrideRunString = true
 
 _R.atac.atacsettings.OverrideRunStringAlt = true
 
-_R.atac.atacsettings.RunStringSevere = false
-
 -- end sh setts
 
 table.Empty( debugoverlay )
@@ -40,7 +39,7 @@ local function tellfunc_generic( func_name )
 		
 		local name = LocalPlayer()
 		
-		_R.atac.net.Start( "atac_NET_FORBIDDENFUNCTION_GENERIC" )
+		_R.atac.net.Start( "atac_NET_FUNCTION_CALLBACK" )
 		
 			_R.atac.net.WString( func_name )
 			
@@ -50,51 +49,18 @@ local function tellfunc_generic( func_name )
 
 end
 
-local function tellfunc_severe( func_name )
-	
-	if CLIENT then
-	
-		local name = LocalPlayer()
-		
-		_R.atac.net.Start( "atac_NET_FORBIDDENFUNCTION_SEVERE" )
-		
-			_R.atac.net.WString( func_name )
-			
-		_R.atac.net.SendToServer()
-	
-	end
-	
-end
-
-debug.getupvalue = function() if CLIENT then tellfunc_severe( "debug.getupvalue" ) end end
+debug.getupvalue = function() if CLIENT then tellfunc_generic( "debug.getupvalue" ) end end
 
 if _R.atac.atacsettings.OverrideRunString then
 	
-	if _R.atac.atacsettings.RunStringSevere then
-	
-		RunString = function() if CLIENT then tellfunc_severe( "RunString" ) end end
-	
-	else
-	
-		RunString = function() if CLIENT then tellfunc_generic( "RunString" ) end end
-	
-	end
+	RunString = function() if CLIENT then tellfunc_generic( "RunString" ) end end
 
 end
 
 if _R.atac.atacsettings.OverrideRunStringAlt then
 	
-	if _R.atac.atacsettings.RunStringSevere then
-	
-		RunStringEx = function() if CLIENT then tellfunc_severe( "RunStringEx" ) end end
-		CompileString = function() if CLIENT then tellfunc_severe( "CompileString" ) end end
-		
-	else
-	
-		RunStringEx = function() if CLIENT then tellfunc_generic( "RunStringEx" ) end end
-		CompileString = function() if CLIENT then tellfunc_generic( "CompileString" ) end end
-	
-	end
+	RunStringEx = function() if CLIENT then tellfunc_generic( "RunStringEx" ) end end
+	CompileString = function() if CLIENT then tellfunc_generic( "CompileString" ) end end
 
 end
 

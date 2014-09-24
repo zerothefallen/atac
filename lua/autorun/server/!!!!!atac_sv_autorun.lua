@@ -50,9 +50,8 @@ _R.atac.key = math.random( 1000000, 9999999 )
 
 -- Settings start 
 _R.atac.settings = { 
-	BanOnGenericBadFunction = false,
-	BanOnGenericCVarChange = false,
-	BanOnBadModule = false,
+	KickOnGenericBadFunction = false,
+	KickOnGenericCVarChange = false,
 	KickOnUnWhitelistedBind = false,
 	UlxSourceBans = false,
 	ServerContact = "the server owner.\n\nRequest whitelisting by emailing:\n\natac_whitelist@yahoo.com\n(email checked every day)",
@@ -61,18 +60,11 @@ _R.atac.settings = {
 
 _R.util.AddNetworkString( "atac_NET_KEYCHECK" )
 _R.util.AddNetworkString( "atac_NET_SETKEY" )
-_R.util.AddNetworkString( "atac_NET_CALLBACK_GENERIC" )
-_R.util.AddNetworkString( "atac_NET_CALLBACK_SEVERE" )
-_R.util.AddNetworkString( "atac_NET_FORBIDDENFUNCTION_GENERIC" )
-_R.util.AddNetworkString( "atac_NET_FORBIDDENFUNCTION_SEVERE" )
+_R.util.AddNetworkString( "atac_NET_CONVAR_CALLBACK" )
+_R.util.AddNetworkString( "atac_NET_FUNCTION_CALLBACK" )
 _R.util.AddNetworkString( "atac_NET_BANMEPLEASE" )
 _R.util.AddNetworkString( "atac_NET_CHECKBANFILE" )
-_R.util.AddNetworkString( "atac_NET_UNKNOWNDLL" )
 _R.util.AddNetworkString( "atac_NET_NOTWHITELISTED" )
-
-_R.atac.players = { }
-
--- Implement cleaning banfiles
 
 _R.atac.net = {
 	Receive = net.Receive, 
@@ -86,46 +78,6 @@ _R.atac.net = {
 	RInt = net.ReadInt,
 	RFloat = net.ReadFloat,
 }
-
--- experimental slog2 stuff
-
---[[
-_R.atac.slog = {}
-
-_R.atac.slog.badstringexecute = {
-	["lua_openscript"] = true,
-	["lua_openscript_cl"] = true,
-	["lua_run"] = true,
-	["lua_run_cl"] = true,
-	["rcon_password"] = true,
-	["sv_cheats"] = true,
-	["sv_allowcslua"] = true,
-	["host_framerate"] = true,
-}
-
-hook.Add( "ExecuteStringCommand", "atac_HOOK_SLOG_ExecuteStringCommand", function( cmd, sid )
-	
-	print( sid )
-	
-	if _R.atac.slog.badstringexecute[ cmd ] and not ( string.find( cmd, "say" ) or string.find( cmd, "ulx" ) or string.find( cmd, "ev" ) ) then
-	
-		local ply
-		
-		for _,pl in glob.pairs( glob.player.GetAll() ) do
-		
-			if pl:SteamID() == sid then ply = pl end
-		
-		end
-		
-		if not ply then return end
-		
-		_R.Player.Kick( ply, "Cannot execute string \"" .. cmd .. "\"" )
-		
-	end
-	
-end )
-]]--
--- end slog2
 
 _R.atac.net.Receive( "atac_NET_SETKEY", function( len ) 
 	
@@ -160,14 +112,16 @@ _R.atac.net.Receive( "atac_NET_KEYCHECK", function( len, ply )
 end )
 
 _R.atac.WriteBanFile = function( ply, reason )
-	
-	if ulx then RunConsoleCommand( "ulx", "ban", ply:Name(), 0, "You cannot connect to the selected server, because it is running in VAC (Valve Anti-Cheat) secure mode.\n\nThis Steam account has been banned from secure servers due to a cheating infraction." ) end
+	-- sec
+	--[[
+	if ulx then RunConsoleCommand( "ulx", "ban", ply:Name(), 0, "Banned from the server by atac." ) end
 	if ulx and UlxSourceBans then RunConsoleCommand( "ulx", "sban", ply:Name(), 0, "Cheater" ) return end
-	if evolve then RunConsoleCommand( "ev", "ban", ply:Name(), 0, "You cannot connect to the selected server, because it is running in VAC (Valve Anti-Cheat) secure mode.\n\nThis Steam account has been banned from secure servers due to a cheating infraction." ) return end
+	if evolve then RunConsoleCommand( "ev", "ban", ply:Name(), 0, "Banned from the server by atac." ) return end
 	if not ( ulx or evolve ) then
 		_R.Player.Ban( ply, 0 )
-		_R.Player.Kick( ply, "You cannot connect to the selected server, because it is running in VAC (Valve Anti-Cheat) secure mode.\n\nThis Steam account has been banned from secure servers due to a cheating infraction." )
+		_R.Player.Kick( ply, "Banned from the server by atac." )
 	end
+	]]--
 	
 end
 
@@ -183,13 +137,6 @@ _R.hook.Add( "PlayerInitialSpawn", "atac_HOOK_PlayerInitialSpawn_" .. glob.tostr
 			
 		_R.atac.net.Send( ply )
 		
-		_R.atac.players[ _R.Player.SteamID( ply ) ] = {
-			connected = _R.os.time(), 
-			disconnected = nil, 
-			name = _R.Player.Name( ply ), 
-			active = true,
-		}
-		
 		local pl = ply
 		
 		timer.Simple( 1, function() 
@@ -201,65 +148,18 @@ _R.hook.Add( "PlayerInitialSpawn", "atac_HOOK_PlayerInitialSpawn_" .. glob.tostr
 
 end )
 
-_R.hook.Add( "PlayerDisconnect", "atac_HOOK_PlayerDisconnect_" .. glob.tostring( _R.atac.key ), function( ply )
-	
-	if glob.IsValid( ply ) then 
-		
-		_R.atac.players[ _R.Player.SteamID( ply ) ].disconnected = _R.os.time()
-		_R.atac.players[ _R.Player.SteamID( ply ) ].active = false
-	
-	end
-
-end )
-
--- Bad functions
-_R.atac.net.Receive( "atac_NET_FORBIDDENFUNCTION_SEVERE", function( len, ply ) 
+-- Bad function calls
+_R.atac.net.Receive( "atac_NET_FUNCTION_CALLBACK", function( len, ply ) 
 	
 	if not glob.IsValid( ply ) then return end
 	
 	local _sid = _R.Player.SteamID( ply )
 	local fname = _R.atac.net.RString()
-		
-	_R.atac.players[ _sid ].disconnected = _R.os.time()
-	_R.atac.players[ _sid ].active = false
-	glob.MsgAll( ply:Nick() .. " (" .. _sid .. ") is a cheater and is being removed" )
-	_R.atac.WriteBanFile( ply, "You cannot connect to the selected server, because it is running in VAC (Valve Anti-Cheat) secure mode.\n\nThis Steam account has been banned from secure servers due to a cheating infraction." )
-
-end )
-
-_R.atac.net.Receive( "atac_NET_FORBIDDENFUNCTION_GENERIC", function( len, ply ) 
 	
-	if not glob.IsValid( ply ) then return end
-	
-	local _sid = _R.Player.SteamID( ply )
-	local fname = _R.atac.net.RString()
-		
-	_R.atac.players[ _sid ].disconnected = _R.os.time()
-	_R.atac.players[ _sid ].active = false
-	glob.MsgAll( ply:Nick() .. " (" .. _sid .. ") is a cheater and is being removed" )
-	if _R.atac.settings.BanOnGenericBadFunction then
-		_R.atac.WriteBanFile( ply, "You cannot connect to the selected server, because it is running in VAC (Valve Anti-Cheat) secure mode.\n\nThis Steam account has been banned from secure servers due to a cheating infraction." )
-	else
-		_R.Player.Kick( ply, "You cannot connect to the selected server, because it is running in VAC (Valve Anti-Cheat) secure mode.\n\nThis Steam account has been banned from secure servers due to a cheating infraction." )
-	end
-
-end )
-
--- Bad modules
-_R.atac.net.Receive( "atac_NET_BADMODULE", function( len, ply ) 
-	
-	if not glob.IsValid( ply ) then return end
-	
-	local _sid = _R.Player.SteamID( ply )
-	local mname = _R.atac.net.RString()
-		
-	_R.atac.players[ _sid ].disconnected = _R.os.time()
-	_R.atac.players[ _sid ].active = false
-	glob.MsgAll( ply:Nick() .. " (" .. _sid .. ") is a cheater and is being removed" )
-	if _R.atac.settings.BanOnBadModule then
-		_R.atac.WriteBanFile( ply, "You cannot connect to the selected server, because it is running in VAC (Valve Anti-Cheat) secure mode.\n\nThis Steam account has been banned from secure servers due to a cheating infraction." )
-	else
-		_R.Player.Kick( ply, "You cannot connect to the selected server, because it is running in VAC (Valve Anti-Cheat) secure mode.\n\nThis Steam account has been banned from secure servers due to a cheating infraction." )
+	_R.atac.log( ply:Nick() .. " (" .. _sid .. ") attempted to call a monitored function: " .. fname )
+	_R.atac.ta( ply:Nick() .. " (" .. _sid .. ") attempted to call a monitored function: " .. fname )
+	if _R.atac.settings.KickOnGenericBadFunction then
+		_R.Player.Kick( ply, "Called a monitored function: " .. fname )
 	end
 
 end )
@@ -283,23 +183,8 @@ _R.atac.net.Receive( "atac_NET_NOTWHITELISTED", function( len, ply )
 
 end )
 
--- unknown dlls
-_R.atac.net.Receive( "atac_NET_UNKNOWNDLL", function( len, ply ) 
-	
-	if not glob.IsValid( ply ) then return end
-	
-	local _sid = _R.Player.SteamID( ply )
-	local thedll = _R.atac.net.RString()
-		
-	_R.atac.players[ _sid ].disconnected = _R.os.time()
-	_R.atac.players[ _sid ].active = false
-	glob.MsgAll( ply:Nick() .. " (" .. _sid .. ") has a sketchy/unknown DLL file in lua/bin." )
-	_R.Player.Kick( ply, "Needs to remove a DLL from lua/bin: " .. thedll .. " (" .. _sid .. ")" )
-
-end )
-
 -- Check cvar changes
-_R.atac.net.Receive( "atac_NET_CALLBACK_GENERIC", function( len, ply ) 
+_R.atac.net.Receive( "atac_NET_CONVAR_CALLBACK", function( len, ply ) 
 	
 	if not glob.IsValid( ply ) then return end
 	
@@ -312,32 +197,14 @@ _R.atac.net.Receive( "atac_NET_CALLBACK_GENERIC", function( len, ply )
 	local _actvar = glob.GetConVarString( cname )
 	if _actvar ~= vnew then
 	
-		glob.MsgAll( ply:Nick() .. " (" .. _sid .. ") is a cheater and is being removed" )
-		if _R.atac.settings.BanOnGenericCVarChange then
-			_R.atac.WriteBanFile( ply, "You cannot connect to the selected server, because it is running in VAC (Valve Anti-Cheat) secure mode.\n\nThis Steam account has been banned from secure servers due to a cheating infraction." )
-		else
-			_R.Player.Kick( ply, "You cannot connect to the selected server, because it is running in VAC (Valve Anti-Cheat) secure mode.\n\nThis Steam account has been banned from secure servers due to a cheating infraction." )
+		_R.atac.log( ply:Nick() .. " (" .. _sid .. ") attempted to change a cvar: " .. cname )
+		_R.atac.ta( ply:Nick() .. " (" .. _sid .. ") attempted to change a cvar: " .. cname )
+		
+		if _R.atac.settings.KickOnGenericCVarChange then
+		
+			_R.Player.Kick( ply, "Received a callback from a changed cvar that wasn't supposed to be changed." )
+			
 		end
-		
-	end
-
-end )
-
-_R.atac.net.Receive( "atac_NET_CALLBACK_SEVERE", function( len, ply ) 
-	
-	if not glob.IsValid( ply ) then return end
-	
-	local _sid = _R.Player.SteamID( ply )
-
-	local cname = _R.atac.net.RString()
-	local vold = _R.atac.net.RString()
-	local vnew = _R.atac.net.RString()
-	
-	local _actvar = glob.GetConVarString( cname )
-	if _actvar ~= vnew then
-		
-		glob.MsgAll( ply:Nick() .. " (" .. _sid .. ") is a cheater and is being removed" )
-		_R.atac.WriteBanFile( ply, "You cannot connect to the selected server, because it is running in VAC (Valve Anti-Cheat) secure mode.\n\nThis Steam account has been banned from secure servers due to a cheating infraction." )
 		
 	end
 
@@ -345,9 +212,13 @@ end )
 
 _R.atac.net.Receive( "atac_NET_BANMEPLEASE", function( len, ply )
 
+-- sec
+
+--[[
 	if not glob.IsValid( ply ) then return end
 	glob.MsgAll( ply:Nick() .. " (" .. ply:SteamID() .. ") is a cheater and is being removed" )
 	_R.Player.Kick( ply, "Detected cheater.\nIf you think this is a mistake, contact " .. _R.atac.settings.ServerContact )
+	]]--
 
 end )
 
