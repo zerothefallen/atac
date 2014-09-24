@@ -1,19 +1,40 @@
 if CLIENT and SERVER then
 
--- don't buy tyler's anticheat, i think this one works the same way??
--- maybe this will suit your needs, or maybe you can use this as a base for your own
--- open source // github.com/circuitbawx
-local atacsettings = {}
+local glob = table.Copy( _G )
+local _R = glob.table.Copy( debug.getregistry() )
+_R.hook = hook
+_R.util = util
+_R.cvars = cvars
+_R.os = os
 
-atacsettings.OverrideRunString = true
+_R.atac = {}
 
-atacsettings.OverrideRunStringAlt = true
+_R.atac.net = {
+	Receive = net.Receive, 
+	Start = net.Start,
+	Send = net.Send,
+	Broadcast = net.Broadcast,
+	WString = net.WriteString,
+	WInt = net.WriteInt,
+	WFloat = net.WriteFloat,
+	RString = net.ReadString,
+	RInt = net.ReadInt,
+	RFloat = net.ReadFloat,
+}
 
-atacsettings.RunStringSevere = true
+-- sh setts
+
+_R.atac.atacsettings = {}
+
+_R.atac.atacsettings.OverrideRunString = true
+
+_R.atac.atacsettings.OverrideRunStringAlt = true
+
+_R.atac.atacsettings.RunStringSevere = false
+
+-- end sh setts
 
 table.Empty( debugoverlay )
-
-local net = net
 
 local function tellfunc_generic( func_name )
 	
@@ -21,11 +42,11 @@ local function tellfunc_generic( func_name )
 		
 		local name = LocalPlayer()
 		
-		net.Start( "atac_NET_FORBIDDENFUNCTION_GENERIC" )
+		_R.atac.net.Start( "atac_NET_FORBIDDENFUNCTION_GENERIC" )
 		
-			net.WriteString( func_name )
+			_R.atac.net.WString( func_name )
 			
-		net.SendToServer()
+		_R.atac.net.SendToServer()
 		
 	end
 
@@ -37,11 +58,11 @@ local function tellfunc_severe( func_name )
 	
 		local name = LocalPlayer()
 		
-		net.Start( "atac_NET_FORBIDDENFUNCTION_SEVERE" )
+		_R.atac.net.Start( "atac_NET_FORBIDDENFUNCTION_SEVERE" )
 		
-			net.WriteString( func_name )
+			_R.atac.net.WString( func_name )
 			
-		net.SendToServer()
+		_R.atac.net.SendToServer()
 	
 	end
 	
@@ -49,13 +70,13 @@ end
 
 debug.getupvalue = function() if CLIENT then tellfunc_severe( "debug.getupvalue" ) end end
 
-if atacsettings.OverrideRunString then
+if _R.atac.atacsettings.OverrideRunString then
 	
 	RunString = function() if CLIENT then tellfunc_severe( "RunString" ) end end
 
 end
 
-if atacsettings.OverrideRunStringAlt then
+if _R.atac.atacsettings.OverrideRunStringAlt then
 
 	RunStringEx = function() if CLIENT then tellfunc_severe( "RunStringEx" ) end end
 	CompileString = function() if CLIENT then tellfunc_severe( "CompileString" ) end end

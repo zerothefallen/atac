@@ -20,7 +20,7 @@ _R.atac.settings = {
 	BanOnBadBind = true,
 	BanOnBadConCommands = true,
 	UlxSourceBans = false,
-	ServerContact = "the server owner.\n\nRequest whitelisting for a certain command, gamemode, script, or addon with the vanilla version of aTac by emailing:\n\natac_whitelist@yahoo.com\n(email checked every day)",
+	ServerContact = "the server owner.\n\nRequest whitelisting by emailing:\n\natac_whitelist@yahoo.com\n(email checked every day)",
 }
 -- Settings end
 

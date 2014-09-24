@@ -13,6 +13,7 @@ _R.util = util
 
 _R.atac = { }
 _R.atac.BindWhitelist = { 
+	[""] = true,
 	["fov"] = true,
 	["restart"] = true,
 	["addip"] = true,
