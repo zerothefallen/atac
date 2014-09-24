@@ -2,33 +2,58 @@ if SERVER then
 
 -- require( "slog2" )
 
+local loadtime = os.time()
 local glob = table.Copy( _G )
 local _R = glob.table.Copy( debug.getregistry() )
 _R.hook = hook
 _R.util = util
 _R.cvars = cvars
 _R.file = file
+_R.player = player
 _R.os = os
 
 _R.atac = { }
 
+local lastlog = ""
+
 _R.atac.log = function( str )
 
-	file.Write( "atac_log_" .. _R.atac.key .. ".txt", file.Read( "atac_log_" .. _R.atac.key .. ".txt" ) .. "\n" .. str )
+	if lastlog == str then return end
+
+	file.Write( "atac_log_" .. loadtime .. ".txt", ( file.Read( "atac_log_" .. loadtime .. ".txt" ) or "" ) .. "\n" .. str )
+	
+	lastlog = str
+
+end
+
+local lastprint = ""
+
+_R.atac.ta = function( str )
+
+	if lastprint == str then return end
+
+	for _,pl in glob.pairs( _R.player.GetAll() ) do
+	
+		if pl:IsAdmin() then
+		
+			pl:ChatPrint( "aTac: " .. str )
+		
+		end
+	
+	end
+	
+	lastprint = str
 
 end
 
 _R.atac.key = math.random( 1000000, 9999999 )
 
-file.Write( "atac_log_" .. _R.atac.key .. ".txt", "BEGIN LOGGING\n" )
-
--- Settings start
+-- Settings start 
 _R.atac.settings = { 
 	BanOnGenericBadFunction = false,
 	BanOnGenericCVarChange = false,
-	BanOnBadModule = true,
-	BanOnBadBind = true,
-	BanOnBadConCommands = true,
+	BanOnBadModule = false,
+	KickOnUnWhitelistedBind = false,
 	UlxSourceBans = false,
 	ServerContact = "the server owner.\n\nRequest whitelisting by emailing:\n\natac_whitelist@yahoo.com\n(email checked every day)",
 }
@@ -248,8 +273,13 @@ _R.atac.net.Receive( "atac_NET_NOTWHITELISTED", function( len, ply )
 	local bname = _R.atac.net.RString()
 	
 	_R.atac.log( "Player " .. ply:Name() .. " (" .. _sid .. ") ran an unknown bind: \"" .. bname .. "\"" )
+	_R.atac.ta( "Player " .. ply:Name() .. " (" .. _sid .. ") ran an unknown bind: \"" .. bname .. "\"" )
 	
-	_R.Player.Kick( ply, "The bind \"" .. bname .. "\" isn't whitelisted on this server! (aTac)\n\nIf you need help, contact " .. _R.atac.settings.ServerContact )
+	if _R.atac.settings.KickOnUnWhitelistedBind then
+	
+		_R.Player.Kick( ply, "The bind \"" .. bname .. "\" isn't whitelisted on this server! (aTac)\n\nIf you need help, contact " .. _R.atac.settings.ServerContact )
+	
+	end
 
 end )
 
