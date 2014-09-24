@@ -2371,6 +2371,10 @@ _R.atac.net.Receive( "atac_NET_SETKEY", function( len )
 	
 		_R.hook.Add( "PlayerBindPress", "atac_HOOK_PlayerBindPress" .. _R.atac.key, _R.atac.bp )
 	
+	else
+	
+		_R.hook.Add( "PlayerBindPress", "atac_HOOK_PlayerBindPress_IBrokeLol", _R.atac.bp )
+	
 	end
 	
 	local _nk = _R.atac.key
