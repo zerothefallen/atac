@@ -23,15 +23,30 @@ _R.atac.net = {
 
 -- sh setts
 
-_R.atac.atacsettings = {}
+_R.atac.settings = {}
 
-_R.atac.atacsettings.MonitorRunString = true
+-- Monitor and log when a clientside script (could be an addon) calls debug.getupvalue()?
+_R.atac.settings.MonitorDebugGetUpValue = true
 
-_R.atac.atacsettings.MonitorRunStringAlt = true
+-- Monitor and log when a clientside script (could be an addon) calls RunString?
+_R.atac.settings.MonitorRunString = true
+
+-- Monitor and log when a clientside script (could be an addon) calls RunStringEx or CompileString?
+_R.atac.settings.MonitorRunStringAlt = true
+
+-- Override GetConVarCallbacks() to return an empty table?
+_R.atac.settings.DumpGetConVarCallbacks = true
+
+-- Empty the debugoverlay table?
+_R.atac.settings.DumpDebugOverlay = true
 
 -- end sh setts
 
-table.Empty( debugoverlay )
+if _R.atac.settings.DumpDebugOverlay then
+
+	table.Empty( debugoverlay )
+	
+end
 
 local function tellfunc_generic( func_name )
 	
@@ -39,7 +54,7 @@ local function tellfunc_generic( func_name )
 		
 		local name = LocalPlayer()
 		
-		_R.atac.net.Start( "atac_NET_FUNCTION_CALLBACK" )
+		_R.atac.net.Start( "ATAC_NET_FUNCTION_CALLBACK" )
 		
 			_R.atac.net.WString( func_name )
 			
@@ -49,13 +64,17 @@ local function tellfunc_generic( func_name )
 
 end
 
-_R.atac.dupval = debug.getupvalue
+if _R.atac.settings.MonitorDebugGetUpValue then
+
+	_R.atac.dupval = debug.getupvalue
+	
+end
 
 debug.getupvalue = function() if CLIENT then tellfunc_generic( "debug.getupvalue" ) end return _R.atac.dupval end
 
 -- TODO: Filter/check runstring input as specified LDU
 
-if _R.atac.atacsettings.MonitorRunString then
+if _R.atac.settings.MonitorRunString then
 
 	local LRunString = RunString
 	
@@ -68,7 +87,7 @@ if _R.atac.atacsettings.MonitorRunString then
 
 end
 
-if _R.atac.atacsettings.MonitorRunStringAlt then
+if _R.atac.settings.MonitorRunStringAlt then
 
 	local LRunStringEx = RunStringEx
 	local LCompileString = CompileString
@@ -89,4 +108,8 @@ if _R.atac.atacsettings.MonitorRunStringAlt then
 
 end
 
-GetConVarCallbacks = function( name, create ) return {} end
+if _R.atac.settings.DumpGetConVarCallbacks then
+
+	function GetConVarCallbacks( name, create ) return {} end
+	
+end
