@@ -16,10 +16,10 @@ if SERVER then
 	_R.atac.settings = { }
 	
 	-- Kick on the change of a monitored cvar?
-	_R.atac.settings.KickOnGenericCVarChange = false,
+	_R.atac.settings.KickOnGenericCVarChange = false
 	
 	-- Tell kick players to contact who for help?
-	_R.atac.settings.ServerContact = "the server owner",
+	_R.atac.settings.ServerContact = "the server owner"
 	
 	-- Settings end
 
